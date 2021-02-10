@@ -1,0 +1,57 @@
+blueprint:
+  name: Room occupancy
+  description: Sets the room occupancy helper on movement, resets when the door is open
+    and no movement inside. The idea is, that once the movement is detected, the helper
+    will stay "on" until somebody leaves the room, and nobody else is inside.
+  source_url: https://github.com/bruxy70
+  domain: automation
+  input:
+    occupancy_helper:
+      name: Occupancy helper
+      description: The input_boolean helper that holds the room occupancy state.
+      selector:
+        entity:
+          domain: input_boolean
+    door_sensor:
+      name: Door sensor
+      description: The door binary sensor trat triggers the helper reset.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: door
+    motion_sensor:
+      name: Motion sensor
+      description: The motion binary sensor trat triggers the change, and is used to
+        verify that nobody is inside after the door opens.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+mode: parallel
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: "on"
+  - platform: state
+    entity_id: !input door_sensor
+    to: "on"
+variables:
+  door: !input door_sensor
+  motion: !input motion_sensor
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.entity_id == motion }}"
+        sequence:
+          - service: input_boolean.turn_on
+            entity_id: !input occupancy_helper
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.entity_id == door }}"
+        sequence:
+          - wait_template: "{{ is_state(motion, 'off') }}"
+            timeout: 00:01:05
+            continue_on_timeout: false
+          - service: input_boolean.turn_off
+            entity_id: !input occupancy_helper
