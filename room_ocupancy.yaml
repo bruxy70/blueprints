@@ -3,7 +3,7 @@ blueprint:
   description: Sets the room occupancy helper on movement, resets when the door is open
     and no movement inside. The idea is, that once the movement is detected, the helper
     will stay "on" until somebody leaves the room, and nobody else is inside.
-  source_url: https://github.com/bruxy70
+  source_url: https://github.com/bruxy70/blueprints/blob/main/room_ocupancy.yaml
   domain: automation
   input:
     occupancy_helper:
